@@ -57,6 +57,7 @@ class ApiClient {
         
         if (response.success) {
             this.setToken(response.data.token);
+            // También guardamos el usuario para mostrarlo en el perfil
             localStorage.setItem('currentUser', JSON.stringify(response.data.usuario));
         }
         return response;
@@ -74,10 +75,6 @@ class ApiClient {
         });
     }
 
-    /**
-     * ACTUALIZAR PRODUCTO (Integrado)
-     * Usamos el método PUT y pasamos los datos del juguete
-     */
     async updateProduct(id, productData) {
         return await this.request(`/api/juguetes/${id}`, {
             method: 'PUT',
@@ -92,11 +89,11 @@ class ApiClient {
     }
 }
 
+// --- CAMBIO IMPORTANTE: EXPOSICIÓN GLOBAL ---
+// Instanciamos la clase y la hacemos accesible para auth.js y app.js
+window.api = new ApiClient();
 
-// Instanciamos la clase para que app.js pueda usarla
-const api = new ApiClient();
-
-// --- FUNCIONES DE NOTIFICACIÓN (Fuera de la clase) ---
+// --- FUNCIONES DE NOTIFICACIÓN ---
 function showMessage(message, type = 'info') {
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${getMessageType(type)} alert-dismissible fade show fixed-top m-3 ms-auto`;
@@ -134,3 +131,6 @@ function getIcon(type) {
         default: return 'fa-info-circle';
     }
 }
+
+// También hacemos global la función de mensajes
+window.showMessage = showMessage;

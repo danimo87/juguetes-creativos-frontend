@@ -6,6 +6,7 @@ let currentEditId = null; // Guarda el ID del juguete que estamos editando
 // 1. Cargar datos al iniciar el Dashboard
 async function loadDashboardData() {
     try {
+        // Usamos api (que ahora será global gracias al cambio en api.js)
         const response = await api.getProducts(); 
         if (response.success) {
             productos = response.data;
@@ -77,10 +78,8 @@ if (formJuguete) {
         try {
             let response;
             if (editMode) {
-                // LLAMADA A EDITAR
                 response = await api.updateProduct(currentEditId, datosJuguete);
             } else {
-                // LLAMADA A CREAR
                 response = await api.createProduct(datosJuguete);
             }
             
@@ -90,7 +89,7 @@ if (formJuguete) {
                 if (modal) modal.hide();
 
                 alert(editMode ? '¡Juguete actualizado!' : '¡Juguete registrado!');
-                resetForm(); // Limpiar todo
+                resetForm(); 
                 await loadDashboardData(); 
             }
         } catch (error) {
@@ -113,30 +112,26 @@ async function confirmDelete(id) {
     }
 }
 
-// 6. Preparar Edición (LLENA EL FORMULARIO Y ABRE EL MODAL)
+// 6. Preparar Edición
 function prepareEdit(id) {
     const producto = productos.find(p => p.id_juguete == id);
     if (producto) {
         editMode = true;
         currentEditId = id;
 
-        // Cambiar el título del modal para que el usuario sepa que está editando
         document.querySelector('#modalJuguete .modal-title').innerHTML = '<i class="fas fa-edit me-2"></i>Editar Juguete';
 
-        // Llenar los campos del formulario con los datos de la fila
         document.getElementById('prodNombre').value = producto.nombre_juguete;
-        document.getElementById('prodCategoria').value = producto.id_categoria || ""; // Usar ID si tienes relación
+        document.getElementById('prodCategoria').value = producto.id_categoria || ""; 
         document.getElementById('prodMaterial').value = producto.id_material || "";
         document.getElementById('prodStock').value = producto.stock_actual;
 
-        // Abrir el modal manualmente
         const modalElement = document.getElementById('modalJuguete');
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
     }
 }
 
-// Función extra para limpiar el formulario cuando se va a crear uno nuevo
 function resetForm() {
     editMode = false;
     currentEditId = null;
@@ -144,39 +139,30 @@ function resetForm() {
     document.querySelector('#modalJuguete .modal-title').innerHTML = '<i class="fas fa-rocket me-2"></i>Registrar Nuevo Juguete';
 }
 
-// Inicialización
+// --- CAMBIO 1: INICIALIZACIÓN CORREGIDA ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Verificamos si ya hay una sesión iniciada
     if (localStorage.getItem('authToken')) {
+        // Si hay token, cargamos datos y saltamos al dashboard
         loadDashboardData();
-        
-        // --- AGREGAR ESTO ---
-        const btnBajo = document.getElementById('cardStockBajo');
-        if (btnBajo) {
-            btnBajo.addEventListener('click', filterLowStock);
+        if(typeof showDashboard === 'function') {
+            showDashboard();
         }
-        // --------------------
-
-    } else {
-        window.location.href = 'index.html';
-    }
+    } 
+    // Nota: Eliminamos el 'else' con el redirect para evitar el bucle infinito en index.html
 });
 
 // Función para filtrar y mostrar solo stock bajo
 function filterLowStock() {
     const productosBajos = productos.filter(p => (p.stock_actual || 0) < 10);
-    
-    // Cambiamos un poco el título de la tabla para que el usuario sepa que está filtrando
     const tituloTabla = document.querySelector('.card-header h5');
     tituloTabla.innerHTML = `
         <span class="text-danger">Mostrando: Stock Bajo</span> 
         <button class="btn btn-sm btn-link" onclick="loadDashboardData()">Ver todos</button>
     `;
-
-    // Reutilizamos tu función de renderizado pero pasándole solo los filtrados
     renderFilteredTable(productosBajos);
 }
 
-// Una pequeña modificación a tu render para que acepte una lista opcional
 function renderFilteredTable(lista) {
     const tbody = document.getElementById('productsTable');
     if (!tbody) return;
@@ -186,7 +172,6 @@ function renderFilteredTable(lista) {
         return;
     }
 
-    // El mismo código que ya tienes en renderProductsTable, pero usando 'lista'
     tbody.innerHTML = lista.map(p => {
         const id = p.id_juguete; 
         const stock = p.stock_actual || 0;
@@ -209,13 +194,22 @@ function renderFilteredTable(lista) {
     }).join('');
 }
 
-// Lógica para filtrar la tabla en tiempo real
-document.getElementById('searchInput').addEventListener('keyup', function(e) {
-    const term = e.target.value.toLowerCase();
-    const rows = document.querySelectorAll('#productsTable tr');
+// Búsqueda en tiempo real
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('keyup', function(e) {
+        const term = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#productsTable tr');
 
-    rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        row.style.display = text.includes(term) ? '' : 'none';
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
     });
-});
+}
+
+// --- CAMBIO 2: HACER FUNCIONES VISIBLES GLOBALMENTE ---
+window.prepareEdit = prepareEdit;
+window.confirmDelete = confirmDelete;
+window.loadDashboardData = loadDashboardData;
+window.resetForm = resetForm;
