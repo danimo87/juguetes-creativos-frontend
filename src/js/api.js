@@ -133,4 +133,5 @@ function getIcon(type) {
 }
 
 // También hacemos global la función de mensajes
+window.api = new ApiClient();
 window.showMessage = showMessage;
