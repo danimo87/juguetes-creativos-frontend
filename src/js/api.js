@@ -17,27 +17,24 @@ class ApiClient {
             config.headers['Authorization'] = `Bearer ${this.token}`;
         }
 
-        try {
-            const response = await fetch(`${this.baseURL}${url}`, config);
-            
-            const contentType = response.headers.get("content-type");
-            let data;
-            
-            if (contentType && contentType.includes("application/json")) {
-                data = await response.json();
-            } else {
-                throw new Error(`Error ${response.status}: El servidor no respondió con JSON.`);
-            }
+        const response = await fetch(`${this.baseURL}${url}`, config);
 
-            if (!response.ok) {
-                throw new Error(data.message || 'Error en la petición');
-            }
+        const contentType = response.headers.get("content-type");
+        let data = {};
 
-            return data;
-        } catch (error) {
-            console.error('Error en request:', error);
-            throw error;
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
         }
+
+        // 👇 DEVOLVEMOS EL ERROR CONTROLADO
+        if (!response.ok) {
+            return {
+                success: false,
+                message: data.message || 'Error en la petición'
+            };
+        }
+
+        return data;
     }
 
     setToken(token) {
@@ -50,16 +47,20 @@ class ApiClient {
         const response = await this.request('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({
-                username: credenciales.username || credenciales.email,
+                username: credenciales.username,
                 password: credenciales.password
             })
         });
-        
-        if (response.success) {
+
+        // 👇 SOLO SI ES EXITOSO
+        if (response.success && response.data?.token) {
             this.setToken(response.data.token);
-            // También guardamos el usuario para mostrarlo en el perfil
-            localStorage.setItem('currentUser', JSON.stringify(response.data.usuario));
+            localStorage.setItem(
+                'currentUser',
+                JSON.stringify(response.data.usuario)
+            );
         }
+
         return response;
     }
 
@@ -89,8 +90,7 @@ class ApiClient {
     }
 }
 
-// --- CAMBIO IMPORTANTE: EXPOSICIÓN GLOBAL ---
-// Instanciamos la clase y la hacemos accesible para auth.js y app.js
+// ✅ SOLO UNA VEZ
 window.api = new ApiClient();
 
 // --- FUNCIONES DE NOTIFICACIÓN ---
@@ -102,16 +102,14 @@ function showMessage(message, type = 'info') {
     alertDiv.setAttribute('role', 'alert');
 
     alertDiv.innerHTML = `
-        <i class="fas ${getIcon(type)} me-2"></i>
         <span>${message}</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
 
     document.body.appendChild(alertDiv);
 
     setTimeout(() => {
-        const bsAlert = new bootstrap.Alert(alertDiv);
-        bsAlert.close();
+        alertDiv.remove();
     }, 4000);
 }
 
@@ -124,14 +122,4 @@ function getMessageType(type) {
     }
 }
 
-function getIcon(type) {
-    switch(type) {
-        case 'success': return 'fa-check-circle';
-        case 'error': return 'fa-exclamation-circle';
-        default: return 'fa-info-circle';
-    }
-}
-
-// También hacemos global la función de mensajes
-window.api = new ApiClient();
 window.showMessage = showMessage;
