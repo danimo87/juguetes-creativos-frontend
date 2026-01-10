@@ -1,70 +1,56 @@
 // --- LÓGICA DE LOGIN ---
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const emailValue = document.getElementById('loginEmail').value;
     const passwordValue = document.getElementById('loginPassword').value;
-    
-    try {
-        const response = await api.login({ 
-            username: emailValue, 
-            password: passwordValue 
-        });
-        
-        if (response.success) {
-            // Guardamos el usuario y saltamos al dashboard
-            localStorage.setItem('currentUser', JSON.stringify(response.data.usuario));
-            showDashboard();
-            if (typeof showMessage === 'function') showMessage('¡Bienvenido!', 'success');
-        } else {
-            alert('Credenciales incorrectas: ' + (response.message || ''));
-        }
-    } catch (error) {
-        console.error("Error detallado:", error);
-        alert('Error al intentar ingresar. Revisa que el backend esté activo.');
+
+    const response = await api.login({ 
+        username: emailValue,
+        password: passwordValue
+    });
+
+    if (response.success) {
+        // 🔥 REDIRECCIÓN REAL
+        window.location.href = 'dashboard.html';
+    } else {
+        alert(response.message || 'Credenciales incorrectas');
     }
 });
 
-function showDashboard() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('dashboardScreen').classList.remove('hidden');
-    document.getElementById('userNav')?.classList.remove('hidden'); 
-    document.getElementById('btnLogout')?.classList.remove('hidden'); 
-
-    if (typeof loadDashboardData === 'function') {
-        loadDashboardData(); 
-    }
-}
-
+// --- LOGOUT ---
 function logout() {
     localStorage.removeItem('currentUser');
-    localStorage.removeItem('authToken'); // Cambiado a 'authToken' para que coincida con api.js
-    window.location.reload();
+    localStorage.removeItem('authToken');
+    window.location.href = 'index.html';
 }
 
+// --- PERFIL ---
 function mostrarPerfil() {
     const datosUser = localStorage.getItem('currentUser');
-    if (datosUser) {
-        const usuario = JSON.parse(datosUser);
-        alert(`👤 PERFIL\n\nNombre: ${usuario.nombre}\nCorreo: ${usuario.email}\nRol: Administrador`);
-    }
+    if (!datosUser) return;
+
+    const usuario = JSON.parse(datosUser);
+    alert(
+        `👤 PERFIL\n\n` +
+        `Nombre: ${usuario.nombre}\n` +
+        `Rol: ${usuario.rol}`
+    );
 }
 
-// --- HACER FUNCIONES VISIBLES PARA EL HTML ---
-window.showDashboard = showDashboard;
-window.logout = logout;
-window.mostrarPerfil = mostrarPerfil;
-
+// --- REGISTRO / LOGIN ---
 function showRegisterForm() {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('registerScreen').classList.remove('hidden');
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('registerScreen')?.classList.remove('hidden');
 }
 
 function showLoginForm() {
-    document.getElementById('registerScreen').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('registerScreen')?.classList.add('hidden');
+    document.getElementById('loginScreen')?.classList.remove('hidden');
 }
 
-// Hacerlas globales
+// --- HACER GLOBALES ---
+window.logout = logout;
+window.mostrarPerfil = mostrarPerfil;
 window.showRegisterForm = showRegisterForm;
 window.showLoginForm = showLoginForm;
