@@ -54,3 +54,17 @@ function mostrarPerfil() {
 window.showDashboard = showDashboard;
 window.logout = logout;
 window.mostrarPerfil = mostrarPerfil;
+
+function showRegisterForm() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('registerScreen').classList.remove('hidden');
+}
+
+function showLoginForm() {
+    document.getElementById('registerScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+// Hacerlas globales
+window.showRegisterForm = showRegisterForm;
+window.showLoginForm = showLoginForm;
