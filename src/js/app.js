@@ -20,12 +20,17 @@ async function loadDashboardData() {
     renderProductsTable();
 }
 
-// ================== ESTADÍSTICAS ==================
 function updateDashboardStats() {
-    document.getElementById('totalProductos')?.textContent = productos.length;
+    const totalProductosEl = document.getElementById('totalProductos');
+    if (totalProductosEl) {
+        totalProductosEl.textContent = productos.length;
+    }
 
     const stockBajo = productos.filter(p => (p.stock_actual || 0) < 10).length;
-    document.getElementById('stockBajo')?.textContent = stockBajo;
+    const stockBajoEl = document.getElementById('stockBajo');
+    if (stockBajoEl) {
+        stockBajoEl.textContent = stockBajo;
+    }
 }
 
 // ================== TABLA ==================
