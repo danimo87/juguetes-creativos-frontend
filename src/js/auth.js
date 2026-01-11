@@ -5,13 +5,19 @@ if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
+        // ⚠️ En realidad es USERNAME, no email
+        const username = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+
+        if (!username || !password) {
+            alert('Por favor ingrese usuario y contraseña');
+            return;
+        }
 
         try {
             const response = await api.login({
-                username: email,
-                password: password
+                username,
+                password
             });
 
             if (!response || response.success === false) {
@@ -21,9 +27,7 @@ if (loginForm) {
 
             // ✅ LOGIN CORRECTO
             showDashboard();
-            if (typeof showMessage === 'function') {
-                showMessage('¡Bienvenido!', 'success');
-            }
+            showMessage('¡Bienvenido!', 'success');
 
         } catch (error) {
             console.error('Error login:', error);
@@ -60,8 +64,8 @@ function mostrarPerfil() {
     const usuario = JSON.parse(datos);
     alert(
         `👤 PERFIL\n\n` +
-        `Nombre: ${usuario.nombre || 'N/A'}\n` +
-        `Correo: ${usuario.email || 'N/A'}\n` +
+        `Usuario: ${usuario.username || 'N/A'}\n` +
+        `Nombre: ${usuario.nombre_completo || 'N/A'}\n` +
         `Rol: ${usuario.rol || 'Usuario'}`
     );
 }
