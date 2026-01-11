@@ -1,44 +1,72 @@
-// --- LÓGICA DE LOGIN ---
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+// ================== LOGIN ==================
+const loginForm = document.getElementById('loginForm');
 
-    const emailValue = document.getElementById('loginEmail').value;
-    const passwordValue = document.getElementById('loginPassword').value;
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    const response = await api.login({ 
-        username: emailValue,
-        password: passwordValue
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await api.login({
+                username: email,
+                password: password
+            });
+
+            if (!response || response.success === false) {
+                alert(response?.message || 'Credenciales incorrectas');
+                return;
+            }
+
+            // ✅ LOGIN CORRECTO
+            showDashboard();
+            if (typeof showMessage === 'function') {
+                showMessage('¡Bienvenido!', 'success');
+            }
+
+        } catch (error) {
+            console.error('Error login:', error);
+            alert('Error de conexión con el servidor');
+        }
     });
+}
 
-    if (response.success) {
-        // 🔥 REDIRECCIÓN REAL
-        window.location.href = 'dashboard.html';
-    } else {
-        alert(response.message || 'Credenciales incorrectas');
+// ================== DASHBOARD ==================
+function showDashboard() {
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('registerScreen')?.classList.add('hidden');
+    document.getElementById('dashboardScreen')?.classList.remove('hidden');
+    document.getElementById('userNav')?.classList.remove('hidden');
+    document.getElementById('btnLogout')?.classList.remove('hidden');
+
+    if (typeof loadDashboardData === 'function') {
+        loadDashboardData();
     }
-});
+}
 
-// --- LOGOUT ---
+// ================== LOGOUT ==================
 function logout() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('authToken');
-    window.location.href = 'index.html';
+    window.location.reload();
 }
 
-// --- PERFIL ---
+// ================== PERFIL ==================
 function mostrarPerfil() {
-    const datosUser = localStorage.getItem('currentUser');
-    if (!datosUser) return;
+    const datos = localStorage.getItem('currentUser');
+    if (!datos) return;
 
-    const usuario = JSON.parse(datosUser);
+    const usuario = JSON.parse(datos);
     alert(
         `👤 PERFIL\n\n` +
-        `Nombre: ${usuario.nombre}\n` +
-        `Rol: ${usuario.rol}`
+        `Nombre: ${usuario.nombre || 'N/A'}\n` +
+        `Correo: ${usuario.email || 'N/A'}\n` +
+        `Rol: ${usuario.rol || 'Usuario'}`
     );
 }
 
-// --- REGISTRO / LOGIN ---
+// ================== LOGIN / REGISTRO ==================
 function showRegisterForm() {
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('registerScreen')?.classList.remove('hidden');
@@ -49,7 +77,8 @@ function showLoginForm() {
     document.getElementById('loginScreen')?.classList.remove('hidden');
 }
 
-// --- HACER GLOBALES ---
+// ================== EXPOSICIÓN GLOBAL ==================
+window.showDashboard = showDashboard;
 window.logout = logout;
 window.mostrarPerfil = mostrarPerfil;
 window.showRegisterForm = showRegisterForm;
