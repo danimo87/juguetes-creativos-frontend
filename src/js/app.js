@@ -149,8 +149,12 @@ searchInput?.addEventListener('keyup', e => {
 
 // ================== INICIALIZACIÓN ==================
 document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('authToken') && typeof showDashboard === 'function') {
-        showDashboard();
+    const token = localStorage.getItem('authToken');
+
+    if (token) {
+        if (typeof showDashboard === 'function') {
+            showDashboard();
+        }
         loadDashboardData();
     }
 });
