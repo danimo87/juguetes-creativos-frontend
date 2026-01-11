@@ -1,6 +1,6 @@
 class ApiClient {
     constructor() {
-        this.baseURL = 'https://juguetes-creativos-backend.onrender.com'; 
+        this.baseURL = 'https://juguetes-creativos-backend.onrender.com';
         this.token = localStorage.getItem('authToken');
     }
 
@@ -19,14 +19,13 @@ class ApiClient {
 
         const response = await fetch(`${this.baseURL}${url}`, config);
 
-        const contentType = response.headers.get("content-type");
         let data = {};
+        const contentType = response.headers.get("content-type");
 
         if (contentType && contentType.includes("application/json")) {
             data = await response.json();
         }
 
-        // 👇 DEVOLVEMOS EL ERROR CONTROLADO
         if (!response.ok) {
             return {
                 success: false,
@@ -42,7 +41,6 @@ class ApiClient {
         localStorage.setItem('authToken', token);
     }
 
-    // --- AUTENTICACIÓN ---
     async login(credenciales) {
         const response = await this.request('/api/auth/login', {
             method: 'POST',
@@ -52,7 +50,6 @@ class ApiClient {
             })
         });
 
-        // 👇 SOLO SI ES EXITOSO
         if (response.success && response.data?.token) {
             this.setToken(response.data.token);
             localStorage.setItem(
@@ -64,62 +61,36 @@ class ApiClient {
         return response;
     }
 
-    // --- JUGUETES (CRUD) ---
     async getProducts() {
-        return await this.request('/api/juguetes'); 
+        return this.request('/api/juguetes');
     }
 
-    async createProduct(productData) {
-        return await this.request('/api/juguetes', {
+    async createProduct(data) {
+        return this.request('/api/juguetes', {
             method: 'POST',
-            body: JSON.stringify(productData)
+            body: JSON.stringify(data)
         });
     }
 
-    async updateProduct(id, productData) {
-        return await this.request(`/api/juguetes/${id}`, {
+    async updateProduct(id, data) {
+        return this.request(`/api/juguetes/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(productData)
+            body: JSON.stringify(data)
         });
     }
 
     async deleteProduct(id) {
-        return await this.request(`/api/juguetes/${id}`, {
+        return this.request(`/api/juguetes/${id}`, {
             method: 'DELETE'
         });
     }
 }
 
-// ✅ SOLO UNA VEZ
+// ✅ UNA SOLA VEZ
 window.api = new ApiClient();
 
-// --- FUNCIONES DE NOTIFICACIÓN ---
+// Mensajes
 function showMessage(message, type = 'info') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${getMessageType(type)} alert-dismissible fade show fixed-top m-3 ms-auto`;
-    alertDiv.style.width = '350px';
-    alertDiv.style.zIndex = '1050';
-    alertDiv.setAttribute('role', 'alert');
-
-    alertDiv.innerHTML = `
-        <span>${message}</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    document.body.appendChild(alertDiv);
-
-    setTimeout(() => {
-        alertDiv.remove();
-    }, 4000);
+    alert(message);
 }
-
-function getMessageType(type) {
-    switch(type) {
-        case 'success': return 'success';
-        case 'error': return 'danger';
-        case 'warning': return 'warning';
-        default: return 'primary';
-    }
-}
-
 window.showMessage = showMessage;
